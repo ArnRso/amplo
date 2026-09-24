@@ -1,20 +1,13 @@
 import AppKit
 import SwiftUI
 
-/// Fenêtre de test du POC, remplacée par le menu de la barre des menus à l'étape 5.
-struct ContentView: View {
+/// Fenêtre de diagnostic, ouverte depuis le menu : niveaux, limiteur, formats détectés.
+struct DiagnosticView: View {
     @Bindable var controller: AmploController
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                statusLabel
-                Spacer()
-                Button(isRunning ? "Arrêter" : "Démarrer") {
-                    isRunning ? controller.stop() : controller.start()
-                }
-                .keyboardShortcut(.defaultAction)
-            }
+            statusLabel
 
             if case .failed(let message) = controller.status {
                 Text(message)
@@ -38,25 +31,13 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Picker("Gain", selection: $controller.gainPercent) {
-                    ForEach(AmploController.gainSteps, id: \.self) { percent in
-                        Text("\(percent) %").tag(percent)
-                    }
-                }
-                .pickerStyle(.segmented)
-                Text("100 % : son d'origine, sans gain ni limitation")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
             Toggle("Test : couper la sortie d'Amplo (le son doit disparaître)", isOn: $controller.silenceTest)
                 .disabled(!isRunning)
 
             GroupBox("Diagnostic") {
                 VStack(alignment: .leading, spacing: 4) {
                     if controller.report.isEmpty {
-                        Text("Démarrez Amplo pour afficher les formats détectés.")
+                        Text("Activez Amplo depuis la barre des menus pour afficher les formats détectés.")
                             .foregroundStyle(.secondary)
                     }
                     ForEach(Array(controller.report.enumerated()), id: \.offset) { _, line in
