@@ -24,11 +24,11 @@ final class AmploController {
 
     /// Palier de gain en pourcentage, parmi `gainSteps`.
     var gainPercent = 150 {
-        didSet { passthrough?.renderer.setGain(gain) }
+        didSet { passthrough?.setGain(gain) }
     }
 
     var silenceTest = false {
-        didSet { passthrough?.renderer.silenceTest.store(silenceTest, ordering: .relaxed) }
+        didSet { passthrough?.setSilenceTest(silenceTest) }
     }
 
     var gain: Float {
@@ -41,9 +41,10 @@ final class AmploController {
     func start() {
         guard passthrough == nil else { return }
         do {
-            let passthrough = try SystemAudioPassthrough()
-            passthrough.renderer.setGain(gain)
-            passthrough.renderer.silenceTest.store(silenceTest, ordering: .relaxed)
+            let passthrough = try SystemAudioPassthrough(gain: gain, silenceTest: silenceTest)
+            passthrough.onOutputChange = { [weak self] error in
+                self?.outputDidChange(error: error)
+            }
             self.passthrough = passthrough
             report = passthrough.report
             status = .running
@@ -69,6 +70,16 @@ final class AmploController {
         limiterReductionDB = 0
         if status == .running {
             status = .stopped
+        }
+    }
+
+    private func outputDidChange(error: Error?) {
+        if let error {
+            // Plus d'étage de sortie : on arrête tout pour que le tap rende le son d'origine.
+            stop()
+            status = .failed(error.localizedDescription)
+        } else {
+            report = passthrough?.report ?? []
         }
     }
 
