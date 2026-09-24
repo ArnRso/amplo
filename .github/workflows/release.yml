@@ -1,0 +1,46 @@
+# Compile Amplo et produit le .zip et le .dmg (signature ad hoc, non notarisés).
+# - tag v* poussé : crée la Release GitHub correspondante avec les deux fichiers ;
+# - pull request ou lancement manuel : simple vérification, fichiers en artefacts.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Sélectionner la version d'Xcode la plus récente
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          xcodebuild -version
+
+      - name: Construire le .zip et le .dmg
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then version="${GITHUB_REF_NAME#v}"; else version="0.0.0-dev.$GITHUB_RUN_NUMBER"; fi
+          scripts/package.sh "$version" "$GITHUB_RUN_NUMBER"
+
+      - name: Publier la release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "Amplo ${GITHUB_REF_NAME#v}" \
+            --notes-file Support/release-notes.md \
+            --generate-notes
+
+      - name: Conserver les fichiers
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Amplo
+          path: dist/*
