@@ -42,5 +42,5 @@ Journaux : `log stream --predicate 'subsystem == "com.amplo.Amplo"'`
 2. ✅ Appliquer un gain fixe de 150 % avec soft clipping
 3. ✅ Rendre le gain modifiable via les paliers
 4. ✅ Gérer le changement de sortie à chaud
-5. Ajouter l'interface barre de menus (+ ouverture à la connexion)
+5. ✅ Ajouter l'interface barre de menus (+ ouverture à la connexion)
 6. ✅ Remplacer le soft clipping par un limiteur (avancée avant l'étape 4)
