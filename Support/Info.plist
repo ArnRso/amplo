@@ -22,6 +22,8 @@
 	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Adrien Russo · Licence GNU GPL 3.0</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>SUFeedURL</key>

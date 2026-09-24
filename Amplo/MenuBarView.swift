@@ -86,9 +86,11 @@ struct MenuBarView: View {
             }
 
             HStack {
-                Text("Amplo \(updates.currentVersion)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Button("À propos d'Amplo \(updates.currentVersion)") {
+                    AboutPanel.show()
+                }
+                .buttonStyle(.link)
+                .font(.caption)
                 Spacer()
                 Button("Rechercher les mises à jour…") {
                     updates.checkForUpdates()
