@@ -1,10 +1,17 @@
 import Foundation
 import Observation
+import ServiceManagement
 
 /// État de l'app : démarre / arrête le passthrough et expose le niveau de sortie à l'interface.
+/// Le palier et l'état marche / arrêt choisis par l'utilisateur sont mémorisés.
 @MainActor
 @Observable
 final class AmploController {
+    private enum DefaultsKey {
+        static let gainPercent = "gainPercent"
+        static let isEnabled = "isEnabled"
+    }
+
     enum Status: Equatable {
         case stopped
         case running
@@ -16,6 +23,7 @@ final class AmploController {
 
     private(set) var status: Status = .stopped
     private(set) var report: [String] = []
+    private(set) var outputName: String?
     private(set) var inputLevelDB = AmploController.meterFloorDB
     private(set) var levelDB = AmploController.meterFloorDB
     /// Réduction appliquée par le limiteur, en dB (0 = inactif).
@@ -23,8 +31,41 @@ final class AmploController {
     private(set) var ioCycles: UInt64 = 0
 
     /// Palier de gain en pourcentage, parmi `gainSteps`.
-    var gainPercent = 150 {
-        didSet { passthrough?.setGain(gain) }
+    var gainPercent = AmploController.storedGainPercent() {
+        didSet {
+            UserDefaults.standard.set(gainPercent, forKey: DefaultsKey.gainPercent)
+            passthrough?.setGain(gain)
+        }
+    }
+
+    /// Interrupteur de l'interface : démarre ou arrête Amplo et mémorise le choix.
+    var isEnabled: Bool {
+        get { status == .running }
+        set {
+            UserDefaults.standard.set(newValue, forKey: DefaultsKey.isEnabled)
+            newValue ? start() : stop()
+        }
+    }
+
+    /// État de l'élément d'ouverture à la connexion (Réglages Système → Ouverture).
+    private(set) var loginItemStatus = SMAppService.mainApp.status
+    private(set) var loginItemError: String?
+
+    var launchesAtLogin: Bool {
+        get { loginItemStatus == .enabled || loginItemStatus == .requiresApproval }
+        set {
+            do {
+                if newValue {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+                loginItemError = nil
+            } catch {
+                loginItemError = error.localizedDescription
+            }
+            refreshLoginItemStatus()
+        }
     }
 
     var silenceTest = false {
@@ -47,6 +88,7 @@ final class AmploController {
             }
             self.passthrough = passthrough
             report = passthrough.report
+            outputName = passthrough.outputName
             status = .running
             meterTask = Task { [weak self] in
                 while !Task.isCancelled {
@@ -65,6 +107,7 @@ final class AmploController {
         meterTask = nil
         passthrough?.stop()
         passthrough = nil
+        outputName = nil
         inputLevelDB = Self.meterFloorDB
         levelDB = Self.meterFloorDB
         limiterReductionDB = 0
@@ -80,7 +123,25 @@ final class AmploController {
             status = .failed(error.localizedDescription)
         } else {
             report = passthrough?.report ?? []
+            outputName = passthrough?.outputName
         }
+    }
+
+    /// L'utilisateur peut changer l'autorisation dans Réglages Système : relu à l'ouverture du menu.
+    func refreshLoginItemStatus() {
+        loginItemStatus = SMAppService.mainApp.status
+    }
+
+    /// Au lancement : redémarre Amplo s'il était actif à la dernière fermeture.
+    func restoreLastState() {
+        if UserDefaults.standard.bool(forKey: DefaultsKey.isEnabled) {
+            start()
+        }
+    }
+
+    private static func storedGainPercent() -> Int {
+        let stored = UserDefaults.standard.integer(forKey: DefaultsKey.gainPercent)
+        return gainSteps.contains(stored) ? stored : 150
     }
 
     private func updateMeter() {

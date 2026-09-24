@@ -32,6 +32,10 @@ final class SystemAudioPassthrough {
         stage?.report ?? []
     }
 
+    var outputName: String? {
+        stage?.outputName
+    }
+
     init(gain: Float, silenceTest: Bool) throws {
         let system = AudioHardwareSystem.shared
         guard let ownProcess = try attempt("Lecture du processus Amplo", { try system.process(for: getpid()) }) else {
