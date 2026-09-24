@@ -11,6 +11,8 @@ struct RoutingPlan {
     let inputBufferCount: Int
     let outputBufferCount: Int
     let inputStreamCount: Int
+    /// Fréquence à laquelle tourne l'IOProc, celle de la sortie.
+    let sampleRate: Double
     let report: [String]
 
     init(aggregate: AudioHardwareAggregateDevice, output: AudioHardwareDevice, tap: AudioHardwareTap) throws {
@@ -92,6 +94,7 @@ struct RoutingPlan {
         self.inputBufferCount = inputConfiguration.count
         self.outputBufferCount = outputConfiguration.count
         self.inputStreamCount = inputStreams.count
+        self.sampleRate = outputFormats[0].mSampleRate
         self.report = report
     }
 
