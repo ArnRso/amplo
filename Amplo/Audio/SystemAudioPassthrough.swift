@@ -63,7 +63,8 @@ final class SystemAudioPassthrough {
             let renderer = BoostRenderer(
                 routes: plan.routes,
                 inputBufferCount: plan.inputBufferCount,
-                outputBufferCount: plan.outputBufferCount
+                outputBufferCount: plan.outputBufferCount,
+                sampleRate: plan.sampleRate
             )
 
             // 4. IOProc appelé directement sur le thread temps réel de Core Audio (pas de queue).
@@ -77,6 +78,8 @@ final class SystemAudioPassthrough {
             undo.append { AudioDeviceDestroyIOProcID(aggregate.id, procID) }
 
             var report = plan.report
+            let latency = Double(renderer.latencyFrames) / plan.sampleRate * 1000
+            report.append("Limiteur : plafond -1 dBFS · anticipation \(latency.formatted(.number.precision(.fractionLength(1)))) ms · relâchement \(Int(LookaheadLimiter.release * 1000)) ms")
             if plan.inputStreamCount > 1 {
                 // La sortie a aussi des entrées (micro d'un casque) : on ne lit que le tap, pour ne
                 // pas ouvrir le micro ni faire basculer un casque Bluetooth en mode appel.

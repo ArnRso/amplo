@@ -18,7 +18,8 @@ final class AmploController {
     private(set) var report: [String] = []
     private(set) var inputLevelDB = AmploController.meterFloorDB
     private(set) var levelDB = AmploController.meterFloorDB
-    private(set) var isSoftClipping = false
+    /// Réduction appliquée par le limiteur, en dB (0 = inactif).
+    private(set) var limiterReductionDB: Float = 0
     private(set) var ioCycles: UInt64 = 0
 
     /// Palier de gain en pourcentage, parmi `gainSteps`.
@@ -36,7 +37,6 @@ final class AmploController {
 
     private var passthrough: SystemAudioPassthrough?
     private var meterTask: Task<Void, Never>?
-    private var softClipHoldTicks = 0
 
     func start() {
         guard passthrough == nil else { return }
@@ -66,7 +66,7 @@ final class AmploController {
         passthrough = nil
         inputLevelDB = Self.meterFloorDB
         levelDB = Self.meterFloorDB
-        isSoftClipping = false
+        limiterReductionDB = 0
         if status == .running {
             status = .stopped
         }
@@ -76,9 +76,8 @@ final class AmploController {
         guard let renderer = passthrough?.renderer else { return }
         inputLevelDB = Self.meterLevel(peak: renderer.takeInputPeak(), previous: inputLevelDB)
         levelDB = Self.meterLevel(peak: renderer.takePeak(), previous: levelDB)
-        // Le voyant reste allumé une demi-seconde après le dernier écrêtage.
-        softClipHoldTicks = renderer.takeClippedSampleCount() > 0 ? 5 : max(softClipHoldTicks - 1, 0)
-        isSoftClipping = softClipHoldTicks > 0
+        let reductionDB = 20 * log10(renderer.takeLimiterGain())
+        limiterReductionDB = min(reductionDB, limiterReductionDB + 1.5)
         ioCycles = renderer.ioCycleCount
     }
 
