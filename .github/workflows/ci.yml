@@ -18,7 +18,7 @@ jobs:
     name: Formatage (swift format)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Sélectionner la version d'Xcode la plus récente
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
       - name: Vérifier le formatage et les règles de style
@@ -28,7 +28,7 @@ jobs:
     name: Tests (AmploDSP)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Sélectionner la version d'Xcode la plus récente
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
       - name: Tests (avertissements bloquants, puis sous Address Sanitizer)
@@ -38,7 +38,7 @@ jobs:
     name: Compilation de l'app (avertissements bloquants)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Sélectionner la version d'Xcode la plus récente
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
       - name: Compiler
