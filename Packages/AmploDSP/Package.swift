@@ -19,11 +19,13 @@ let package = Package(
     ],
 )
 
-/// Réglages les plus stricts : avertissements bloquants, sûreté mémoire explicite
-/// et fonctionnalités à venir de Swift activées dès maintenant.
+/// Réglages les plus stricts : sûreté mémoire explicite et fonctionnalités à venir de Swift
+/// activées dès maintenant.
+///
+/// Les avertissements sont rendus bloquants par `scripts/test.sh` plutôt qu'ici : Xcode 26
+/// compile les packages locaux en masquant leurs avertissements, ce qui entre en conflit.
 var strictSettings: [SwiftSetting] {
     [
-        .treatAllWarnings(as: .error),
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),

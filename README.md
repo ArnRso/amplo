@@ -39,7 +39,7 @@ Règles les plus strictes, vérifiées par la CI ([ci.yml](.github/workflows/ci.
 
 - **Tests** : le traitement audio temps réel (routage, gain, limiteur) vit dans le package local
   [AmploDSP](Packages/AmploDSP), testé avec Swift Testing, y compris sous Address Sanitizer :
-  `swift test --package-path Packages/AmploDSP`
+  `scripts/test.sh`
 - **Formatage et style** : `swift format` avec toutes les règles activées ([.swift-format](.swift-format)) :
   `scripts/lint.sh` pour vérifier, `scripts/lint.sh --fix` pour reformater
 - **Compilation** : Swift 6 en concurrence stricte, sûreté mémoire explicite (`unsafe`),

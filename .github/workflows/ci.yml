@@ -31,10 +31,8 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Sélectionner la version d'Xcode la plus récente
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
-      - name: Tests
-        run: swift test --package-path Packages/AmploDSP
-      - name: Tests sous Address Sanitizer (accès mémoire invalides)
-        run: swift test --package-path Packages/AmploDSP --sanitize=address
+      - name: Tests (avertissements bloquants, puis sous Address Sanitizer)
+        run: scripts/test.sh
 
   build:
     name: Compilation de l'app (avertissements bloquants)

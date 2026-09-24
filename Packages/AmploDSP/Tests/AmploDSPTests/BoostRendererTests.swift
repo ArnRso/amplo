@@ -213,8 +213,8 @@ struct ChannelLayoutTests {
         defer {
             unsafe free(inputList.unsafeMutablePointer)
             unsafe free(outputList.unsafeMutablePointer)
-            for unsafe pointer in unsafe allocations {
-                unsafe pointer.deallocate()
+            for index in unsafe allocations.indices {
+                unsafe allocations[index].deallocate()
             }
         }
 
