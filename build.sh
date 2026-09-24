@@ -15,7 +15,7 @@ if ! grep -q 'DEVELOPMENT_TEAM = [A-Z0-9]' Amplo.xcodeproj/project.pbxproj; then
   signing=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=)
 fi
 
-xcodebuild -project Amplo.xcodeproj -scheme Amplo -configuration Release \
+xcodebuild -project Amplo.xcodeproj -scheme Amplo -configuration Release -destination 'generic/platform=macOS' \
   -derivedDataPath build/DerivedData -allowProvisioningUpdates -quiet \
   "${signing[@]}" build
 

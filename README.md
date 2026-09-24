@@ -8,7 +8,10 @@ tap global muet excluant Amplo → aggregate device privé (sortie par défaut +
 
 ## Compiler et lancer
 
-Les Command Line Tools suffisent (Xcode non requis) :
+Avec Xcode : ouvrir `Amplo.xcodeproj` et lancer le schéma **Amplo** (⌘R).
+Pour signer avec son Apple ID, choisir son équipe dans la cible Amplo → Signing & Capabilities.
+
+En ligne de commande (Release, dans `build/Amplo.app`) :
 
 ```sh
 ./build.sh
@@ -17,7 +20,7 @@ open build/Amplo.app
 
 Au premier démarrage, macOS demande l'autorisation d'enregistrer l'audio système
 (Réglages Système → Confidentialité et sécurité → Enregistrement de l'écran et de l'audio système).
-Avec une signature ad hoc, la demande peut revenir après chaque compilation ; pour la réinitialiser :
+Sans équipe choisie, `build.sh` signe en ad hoc et la demande peut revenir après chaque compilation ; pour la réinitialiser :
 
 ```sh
 tccutil reset AudioCapture com.amplo.Amplo
