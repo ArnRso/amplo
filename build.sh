@@ -1,5 +1,6 @@
 #!/bin/zsh
 # Compile Amplo avec xcodebuild (Release) et place l'app dans build/Amplo.app.
+# Avec --install, la copie aussi dans /Applications (emplacement stable pour l'ouverture à la connexion).
 set -euo pipefail
 cd "${0:A:h}"
 
@@ -28,4 +29,11 @@ fi
 
 rm -rf build/Amplo.app
 cp -R build/DerivedData/Build/Products/Release/Amplo.app build/
-echo "OK : build/Amplo.app ($(codesign -dvv build/Amplo.app 2>&1 | grep -E '^(Authority|Signature)=' | head -1))"
+app=build/Amplo.app
+if [[ ${1:-} == --install ]]; then
+  rm -rf /Applications/Amplo.app
+  cp -R build/Amplo.app /Applications/
+  app=/Applications/Amplo.app
+fi
+
+echo "OK : $app ($(codesign -dvv "$app" 2>&1 | grep -E '^(Authority|Signature)=' | head -1))"

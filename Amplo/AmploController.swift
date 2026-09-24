@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import ServiceManagement
 
 /// État de l'app : démarre / arrête le passthrough et expose le niveau de sortie à l'interface.
 /// Le palier et l'état marche / arrêt choisis par l'utilisateur sont mémorisés.
@@ -43,6 +44,27 @@ final class AmploController {
         set {
             UserDefaults.standard.set(newValue, forKey: DefaultsKey.isEnabled)
             newValue ? start() : stop()
+        }
+    }
+
+    /// État de l'élément d'ouverture à la connexion (Réglages Système → Ouverture).
+    private(set) var loginItemStatus = SMAppService.mainApp.status
+    private(set) var loginItemError: String?
+
+    var launchesAtLogin: Bool {
+        get { loginItemStatus == .enabled || loginItemStatus == .requiresApproval }
+        set {
+            do {
+                if newValue {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+                loginItemError = nil
+            } catch {
+                loginItemError = error.localizedDescription
+            }
+            refreshLoginItemStatus()
         }
     }
 
@@ -103,6 +125,11 @@ final class AmploController {
             report = passthrough?.report ?? []
             outputName = passthrough?.outputName
         }
+    }
+
+    /// L'utilisateur peut changer l'autorisation dans Réglages Système : relu à l'ouverture du menu.
+    func refreshLoginItemStatus() {
+        loginItemStatus = SMAppService.mainApp.status
     }
 
     /// Au lancement : redémarre Amplo s'il était actif à la dernière fermeture.

@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 import SwiftUI
 
 /// Panneau ouvert depuis l'icône de la barre des menus.
@@ -50,6 +51,30 @@ struct MenuBarView: View {
 
             Divider()
 
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Ouvrir Amplo à la connexion", isOn: $controller.launchesAtLogin)
+                    .toggleStyle(.checkbox)
+                if controller.loginItemStatus == .requiresApproval {
+                    HStack {
+                        Text("À autoriser dans Réglages Système")
+                            .foregroundStyle(.orange)
+                        Button("Ouvrir") {
+                            SMAppService.openSystemSettingsLoginItems()
+                        }
+                        .buttonStyle(.link)
+                    }
+                    .font(.caption)
+                }
+                if let error = controller.loginItemError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Divider()
+
             HStack {
                 Button("Diagnostic…") {
                     openWindow(id: "diagnostic")
@@ -64,6 +89,9 @@ struct MenuBarView: View {
         }
         .padding(16)
         .frame(width: 340)
+        .onAppear {
+            controller.refreshLoginItemStatus()
+        }
     }
 }
 
