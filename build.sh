@@ -19,6 +19,13 @@ xcodebuild -project Amplo.xcodeproj -scheme Amplo -configuration Release -destin
   -derivedDataPath build/DerivedData -allowProvisioningUpdates -quiet \
   "${signing[@]}" build
 
+# Quitte proprement l'instance en cours (arrêt du tap, le son revient) : sinon `open`
+# se contenterait de réactiver l'ancienne version.
+if pgrep -xq Amplo; then
+  osascript -e 'quit app id "com.amplo.Amplo"'
+  while pgrep -xq Amplo; do sleep 0.1; done
+fi
+
 rm -rf build/Amplo.app
 cp -R build/DerivedData/Build/Products/Release/Amplo.app build/
 echo "OK : build/Amplo.app ($(codesign -dvv build/Amplo.app 2>&1 | grep -E '^(Authority|Signature)=' | head -1))"
