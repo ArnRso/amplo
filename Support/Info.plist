@@ -27,7 +27,7 @@
 	<key>SUFeedURL</key>
 	<string>https://github.com/ArnRso/amplo/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>CLE_PUBLIQUE_A_RENSEIGNER</string>
+	<string>NK3HO5PRP/0ti6CGPEjkSOjAYBRLQCK0lDkAsVkvKZk=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
