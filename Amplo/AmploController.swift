@@ -12,23 +12,36 @@ final class AmploController {
     }
 
     static let meterFloorDB: Float = -60
+    static let boostGain: Float = 1.5
 
     private(set) var status: Status = .stopped
     private(set) var report: [String] = []
+    private(set) var inputLevelDB = AmploController.meterFloorDB
     private(set) var levelDB = AmploController.meterFloorDB
+    private(set) var isSoftClipping = false
     private(set) var ioCycles: UInt64 = 0
+
+    var isBoostEnabled = true {
+        didSet { passthrough?.renderer.setGain(gain) }
+    }
 
     var silenceTest = false {
         didSet { passthrough?.renderer.silenceTest.store(silenceTest, ordering: .relaxed) }
     }
 
+    var gain: Float {
+        isBoostEnabled ? Self.boostGain : 1
+    }
+
     private var passthrough: SystemAudioPassthrough?
     private var meterTask: Task<Void, Never>?
+    private var softClipHoldTicks = 0
 
     func start() {
         guard passthrough == nil else { return }
         do {
             let passthrough = try SystemAudioPassthrough()
+            passthrough.renderer.setGain(gain)
             passthrough.renderer.silenceTest.store(silenceTest, ordering: .relaxed)
             self.passthrough = passthrough
             report = passthrough.report
@@ -50,7 +63,9 @@ final class AmploController {
         meterTask = nil
         passthrough?.stop()
         passthrough = nil
+        inputLevelDB = Self.meterFloorDB
         levelDB = Self.meterFloorDB
+        isSoftClipping = false
         if status == .running {
             status = .stopped
         }
@@ -58,10 +73,17 @@ final class AmploController {
 
     private func updateMeter() {
         guard let renderer = passthrough?.renderer else { return }
-        let peak = renderer.takePeak()
-        let peakDB = peak > 0 ? max(20 * log10(peak), Self.meterFloorDB) : Self.meterFloorDB
-        // Retombée progressive pour que l'indicateur reste lisible.
-        levelDB = max(peakDB, levelDB - 1.5)
+        inputLevelDB = Self.meterLevel(peak: renderer.takeInputPeak(), previous: inputLevelDB)
+        levelDB = Self.meterLevel(peak: renderer.takePeak(), previous: levelDB)
+        // Le voyant reste allumé une demi-seconde après le dernier écrêtage.
+        softClipHoldTicks = renderer.takeClippedSampleCount() > 0 ? 5 : max(softClipHoldTicks - 1, 0)
+        isSoftClipping = softClipHoldTicks > 0
         ioCycles = renderer.ioCycleCount
+    }
+
+    /// Crête en dBFS, avec une retombée progressive pour que l'indicateur reste lisible.
+    private static func meterLevel(peak: Float, previous: Float) -> Float {
+        let peakDB = peak > 0 ? max(20 * log10(peak), meterFloorDB) : meterFloorDB
+        return max(peakDB, previous - 1.5)
     }
 }
