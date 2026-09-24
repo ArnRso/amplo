@@ -1,0 +1,16 @@
+# Mises à jour automatiques des dépendances : Sparkle (projet Xcode) et actions GitHub.
+version: 2
+updates:
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "Dépendances"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "CI"

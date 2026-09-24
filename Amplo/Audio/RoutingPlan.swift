@@ -1,3 +1,4 @@
+import AmploDSP
 import CoreAudio
 
 /// Correspondance entre les canaux du tap et ceux de la sortie, déduite des formats réels
@@ -15,7 +16,11 @@ struct RoutingPlan {
     let sampleRate: Double
     let report: [String]
 
-    init(aggregate: AudioHardwareAggregateDevice, output: AudioHardwareDevice, tap: AudioHardwareTap) throws {
+    init(
+        aggregate: AudioHardwareAggregateDevice,
+        output: AudioHardwareDevice,
+        tap: AudioHardwareTap,
+    ) throws {
         var report: [String] = []
 
         let outputName = try output.name
@@ -41,7 +46,9 @@ struct RoutingPlan {
         }
 
         guard let tapStreamFormat = inputFormats.last else {
-            throw AmploAudioError("L'aggregate device n'expose aucun flux d'entrée : le tap n'y figure pas.")
+            throw AmploAudioError(
+                "L'aggregate device n'expose aucun flux d'entrée : le tap n'y figure pas."
+            )
         }
         guard tapStreamFormat.isFloat32PCM else {
             throw AmploAudioError("Format du tap non géré : \(tapStreamFormat.summary)")
@@ -51,31 +58,41 @@ struct RoutingPlan {
         }
         // Vérifié à l'écoute (Bluetooth à 44 100 Hz) : l'aggregate rééchantillonne le tap
         // via la compensation de dérive, sans décalage de hauteur ni craquement.
-        if let format = outputFormats.first(where: { $0.mSampleRate != tapStreamFormat.mSampleRate }) {
-            report.append("Rééchantillonnage du tap par Core Audio : \(tapStreamFormat.mSampleRate.formatted()) Hz → \(format.mSampleRate.formatted()) Hz")
+        if let format = outputFormats.first(where: { $0.mSampleRate != tapStreamFormat.mSampleRate }
+        ) {
+            report.append(
+                "Rééchantillonnage du tap par Core Audio : \(tapStreamFormat.mSampleRate.formatted()) Hz → \(format.mSampleRate.formatted()) Hz"
+            )
         }
-        let outputDeviceInputStreams = try output.streams.filter { try $0.direction == .input }.count
+        let outputDeviceInputStreams = try output.streams.filter { try $0.direction == .input }
+            .count
         if inputStreams.count != outputDeviceInputStreams + 1 {
-            report.append("⚠︎ \(inputStreams.count) flux d'entrée dans l'aggregate, \(outputDeviceInputStreams + 1) attendus")
+            report.append(
+                "⚠︎ \(inputStreams.count) flux d'entrée dans l'aggregate, \(outputDeviceInputStreams + 1) attendus"
+            )
         }
 
-        let inputConfiguration = try aggregate.inputStreamConfiguration
-        let outputConfiguration = try aggregate.outputStreamConfiguration
-        let inputSlots = Self.slots(inputConfiguration)
-        let outputSlots = Self.slots(outputConfiguration)
+        let inputConfiguration = unsafe try aggregate.inputStreamConfiguration
+        let outputConfiguration = unsafe try aggregate.outputStreamConfiguration
+        let inputSlots = unsafe Self.slots(inputConfiguration)
+        let outputSlots = unsafe Self.slots(outputConfiguration)
         let tapChannels = Int(tapStreamFormat.mChannelsPerFrame)
-        guard tapChannels > 0, inputSlots.count >= tapChannels else {
+        let tapSlots = inputSlots.suffix(tapChannels)
+        guard let left = tapSlots.first, inputSlots.count >= tapChannels else {
             throw AmploAudioError("Canaux du tap introuvables dans l'aggregate device.")
         }
         guard !outputSlots.isEmpty else {
             throw AmploAudioError("La sortie \(outputName) n'a aucun canal de sortie.")
         }
-        let tapSlots = inputSlots.suffix(tapChannels)
-        let left = tapSlots.first!
         let right = tapSlots.dropFirst().first ?? left
 
         if outputSlots.count == 1 {
-            routes = [OutputRoute(destination: outputSlots[0], source: left == right ? .tap(left) : .tapMix(left, right))]
+            routes = [
+                OutputRoute(
+                    destination: outputSlots[0],
+                    source: left == right ? .tap(left) : .tapMix(left, right),
+                )
+            ]
             report.append("Routage : tap G+D → sortie mono")
         } else {
             // Les canaux stéréo préférés sont numérotés à partir de 1.
@@ -85,14 +102,17 @@ struct RoutingPlan {
                 (leftOut, rightOut) = (0, 1)
             }
             routes = outputSlots.enumerated().map { index, slot in
-                let source: OutputRoute.Source = index == leftOut ? .tap(left) : index == rightOut ? .tap(right) : .silence
+                let source: OutputRoute.Source =
+                    index == leftOut ? .tap(left) : index == rightOut ? .tap(right) : .silence
                 return OutputRoute(destination: slot, source: source)
             }
-            report.append("Routage : tap G → canal \(leftOut + 1), tap D → canal \(rightOut + 1) sur \(outputSlots.count)")
+            report.append(
+                "Routage : tap G → canal \(leftOut + 1), tap D → canal \(rightOut + 1) sur \(outputSlots.count)"
+            )
         }
 
-        self.inputBufferCount = inputConfiguration.count
-        self.outputBufferCount = outputConfiguration.count
+        self.inputBufferCount = unsafe inputConfiguration.count
+        self.outputBufferCount = unsafe outputConfiguration.count
         self.inputStreamCount = inputStreams.count
         self.sampleRate = outputFormats[0].mSampleRate
         self.report = report
@@ -100,9 +120,11 @@ struct RoutingPlan {
 
     /// Liste à plat des canaux décrits par une configuration de flux (un AudioBuffer par flux).
     private static func slots(_ configuration: [AudioBuffer]) -> [ChannelSlot] {
-        configuration.enumerated().flatMap { index, buffer in
-            let channelCount = Int(buffer.mNumberChannels)
-            return (0..<channelCount).map { ChannelSlot(buffer: index, channel: $0, channelCount: channelCount) }
+        unsafe configuration.enumerated().flatMap { index, buffer in
+            let channelCount = unsafe Int(buffer.mNumberChannels)
+            return (0..<channelCount).map {
+                ChannelSlot(buffer: index, channel: $0, channelCount: channelCount)
+            }
         }
     }
 }

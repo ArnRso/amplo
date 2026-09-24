@@ -41,11 +41,13 @@ struct MenuBarView: View {
             if controller.status == .running {
                 VStack(alignment: .leading, spacing: 4) {
                     Label(controller.outputName ?? "Sortie inconnue", systemImage: "hifispeaker")
-                    Text(controller.limiterReductionDB < -0.1
-                        ? String(format: "Limiteur : %.1f dB", controller.limiterReductionDB)
-                        : "Limiteur : inactif")
-                        .monospacedDigit()
-                        .foregroundStyle(controller.limiterReductionDB < -0.1 ? .orange : .secondary)
+                    unsafe Text(
+                        controller.limiterReductionDB < -0.1
+                            ? String(format: "Limiteur : %.1f dB", controller.limiterReductionDB)
+                            : "Limiteur : inactif"
+                    )
+                    .monospacedDigit()
+                    .foregroundStyle(controller.limiterReductionDB < -0.1 ? .orange : .secondary)
                 }
                 .font(.caption)
             }
@@ -133,26 +135,49 @@ struct MenuBarIcon: View {
 @MainActor
 enum MenuBarSymbol {
     static let running = image(speaker: "hifispeaker.fill", trailing: "wave.3.right")
-    static let stopped = image(speaker: "hifispeaker", trailing: "wave.3.right", trailingOpacity: 0.35)
+    static let stopped = image(
+        speaker: "hifispeaker",
+        trailing: "wave.3.right",
+        trailingOpacity: 0.35,
+    )
     static let failed = image(speaker: "hifispeaker", trailing: "xmark")
 
     static func image(speaker: String, trailing: String, trailingOpacity: CGFloat = 1) -> NSImage {
         let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-        let speakerImage = NSImage(systemSymbolName: speaker, accessibilityDescription: nil)!.withSymbolConfiguration(configuration)!
-        let trailingImage = NSImage(systemSymbolName: trailing, accessibilityDescription: nil)!.withSymbolConfiguration(configuration)!
+        guard
+            let speakerImage = NSImage(systemSymbolName: speaker, accessibilityDescription: nil)?
+                .withSymbolConfiguration(configuration),
+            let trailingImage = NSImage(systemSymbolName: trailing, accessibilityDescription: nil)?
+                .withSymbolConfiguration(configuration)
+        else {
+            // Symboles présents depuis macOS 11 : ne se produit pas sur les systèmes pris en charge.
+            return NSImage()
+        }
         let spacing: CGFloat = 1.5
         let size = NSSize(
             width: speakerImage.size.width + spacing + trailingImage.size.width,
-            height: max(speakerImage.size.height, trailingImage.size.height)
+            height: max(speakerImage.size.height, trailingImage.size.height),
         )
         let image = NSImage(size: size, flipped: false) { _ in
-            speakerImage.draw(in: NSRect(x: 0, y: (size.height - speakerImage.size.height) / 2, width: speakerImage.size.width, height: speakerImage.size.height))
-            trailingImage.draw(in: NSRect(
-                x: speakerImage.size.width + spacing,
-                y: (size.height - trailingImage.size.height) / 2,
-                width: trailingImage.size.width,
-                height: trailingImage.size.height
-            ), from: .zero, operation: .sourceOver, fraction: trailingOpacity)
+            speakerImage.draw(
+                in: NSRect(
+                    x: 0,
+                    y: (size.height - speakerImage.size.height) / 2,
+                    width: speakerImage.size.width,
+                    height: speakerImage.size.height,
+                )
+            )
+            trailingImage.draw(
+                in: NSRect(
+                    x: speakerImage.size.width + spacing,
+                    y: (size.height - trailingImage.size.height) / 2,
+                    width: trailingImage.size.width,
+                    height: trailingImage.size.height,
+                ),
+                from: .zero,
+                operation: .sourceOver,
+                fraction: trailingOpacity,
+            )
             return true
         }
         image.isTemplate = true
