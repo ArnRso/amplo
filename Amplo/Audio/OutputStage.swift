@@ -8,6 +8,7 @@ import Foundation
 /// du MainActor, puisqu'il est appelé sur le thread temps réel de Core Audio.
 final class OutputStage {
     let outputUID: String
+    let outputName: String
     let renderer: BoostRenderer
     let report: [String]
 
@@ -20,6 +21,7 @@ final class OutputStage {
 
         do {
             let outputUID = try attempt("Lecture de l'UID de la sortie", { try output.uid })
+            let outputName = try attempt("Lecture du nom de la sortie", { try output.name })
             let tapUID = try attempt("Lecture de l'UID du tap", { try tap.uid })
 
             // Aggregate device privé : la sortie comme sous-périphérique principal (horloge), plus le tap.
@@ -81,6 +83,7 @@ final class OutputStage {
             }
 
             self.outputUID = outputUID
+            self.outputName = outputName
             self.aggregate = aggregate
             self.ioProcID = procID
             self.renderer = renderer
