@@ -6,6 +6,26 @@ Booster de volume pour macOS : capte tout le son du système, lui applique un ga
 Repose sur les Core Audio Process Taps (macOS 14.2+), sans driver audio virtuel :
 tap global muet excluant Amplo → aggregate device privé (sortie par défaut + tap) → IOProc.
 
+## Installer
+
+Télécharger le `.dmg` de la [dernière release](https://github.com/ArnRso/amplo/releases/latest), l'ouvrir et
+glisser Amplo dans Applications. L'app n'est pas notarisée : au premier lancement, macOS la bloque ;
+l'autoriser dans Réglages Système › Confidentialité et sécurité › « Ouvrir quand même ».
+
+## Publier une version
+
+Pousser un tag `v…` : GitHub Actions ([release.yml](.github/workflows/release.yml)) compile l'app,
+produit le `.zip` et le `.dmg` (signés ad hoc) et crée la release avec les notes de
+[Support/release-notes.md](Support/release-notes.md).
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+En local, `scripts/package.sh 0.1.0` produit les mêmes fichiers dans `dist/`.
+L'icône et le fond du `.dmg` sont générés par `swift scripts/make-artwork.swift`.
+
 ## Compiler et lancer
 
 Avec Xcode : ouvrir `Amplo.xcodeproj` et lancer le schéma **Amplo** (⌘R).
