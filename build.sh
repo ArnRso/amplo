@@ -21,4 +21,4 @@ xcodebuild -project Amplo.xcodeproj -scheme Amplo -configuration Release -destin
 
 rm -rf build/Amplo.app
 cp -R build/DerivedData/Build/Products/Release/Amplo.app build/
-echo "OK : build/Amplo.app ($(codesign -dv build/Amplo.app 2>&1 | grep -E '^(Authority|Signature)=' | head -1))"
+echo "OK : build/Amplo.app ($(codesign -dvv build/Amplo.app 2>&1 | grep -E '^(Authority|Signature)=' | head -1))"
