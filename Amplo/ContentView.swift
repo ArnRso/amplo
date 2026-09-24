@@ -26,10 +26,11 @@ struct ContentView: View {
                 meter("Capté (avant gain)", levelDB: controller.inputLevelDB)
                 meter("Envoyé à la sortie", levelDB: controller.levelDB)
                 HStack {
-                    Text("Soft clipping")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(controller.isSoftClipping ? .orange : .secondary.opacity(0.4))
+                    Text("Limiteur")
                     Spacer()
+                    Text(String(format: "%.1f dB", controller.limiterReductionDB))
+                        .monospacedDigit()
+                        .foregroundStyle(controller.limiterReductionDB < -0.1 ? .orange : .secondary)
                 }
                 Text("Cycles IO : \(controller.ioCycles)")
                     .font(.caption)
@@ -44,7 +45,7 @@ struct ContentView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                Text("100 % : copie sans altération")
+                Text("100 % : son d'origine, sans gain ni limitation")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
