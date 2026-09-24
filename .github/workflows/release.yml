@@ -1,13 +1,12 @@
 # Compile Amplo et produit le .zip et le .dmg (signature ad hoc, non notarisés).
 # - tag v* poussé : signe le .zip pour Sparkle (secret SPARKLE_PRIVATE_KEY), génère appcast.xml
 #   et crée la Release GitHub avec les trois fichiers ;
-# - pull request ou lancement manuel : simple vérification, fichiers en artefacts.
+# - lancement manuel : simple vérification, fichiers en artefacts.
 name: Release
 
 on:
   push:
     tags: ["v*"]
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -17,7 +16,7 @@ jobs:
   package:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Sélectionner la version d'Xcode la plus récente
         run: |
@@ -61,7 +60,7 @@ jobs:
 
       - name: Conserver les fichiers
         if: github.ref_type != 'tag'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Amplo
           path: dist/*

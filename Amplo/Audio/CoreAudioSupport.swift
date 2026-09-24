@@ -12,7 +12,8 @@ struct AmploAudioError: LocalizedError {
     }
 
     init(_ action: String, status: OSStatus) {
-        errorDescription = "\(action) : échec (OSStatus \(status) \(fourCC(UInt32(bitPattern: status))))"
+        errorDescription =
+            "\(action) : échec (OSStatus \(status) \(fourCC(UInt32(bitPattern: status))))"
     }
 }
 
@@ -47,13 +48,17 @@ func transportName(_ transportType: UInt32) -> String {
 
 extension AudioStreamBasicDescription {
     var isFloat32PCM: Bool {
-        mFormatID == kAudioFormatLinearPCM && mFormatFlags & kAudioFormatFlagIsFloat != 0 && mBitsPerChannel == 32
+        mFormatID == kAudioFormatLinearPCM && mFormatFlags & kAudioFormatFlagIsFloat != 0
+            && mBitsPerChannel == 32
     }
 
     var summary: String {
         let isFloat = mFormatFlags & kAudioFormatFlagIsFloat != 0
         let isInterleaved = mFormatFlags & kAudioFormatFlagIsNonInterleaved == 0
-        let sampleType = mFormatID == kAudioFormatLinearPCM ? "\(isFloat ? "Float" : "Int")\(mBitsPerChannel)" : fourCC(mFormatID)
-        return "\(mSampleRate.formatted()) Hz · \(mChannelsPerFrame) canaux · \(sampleType) · \(isInterleaved ? "entrelacé" : "non entrelacé")"
+        let sampleType =
+            mFormatID == kAudioFormatLinearPCM
+            ? "\(isFloat ? "Float" : "Int")\(mBitsPerChannel)" : fourCC(mFormatID)
+        return
+            "\(mSampleRate.formatted()) Hz · \(mChannelsPerFrame) canaux · \(sampleType) · \(isInterleaved ? "entrelacé" : "non entrelacé")"
     }
 }

@@ -21,9 +21,11 @@ struct DiagnosticView: View {
                 HStack {
                     Text("Limiteur")
                     Spacer()
-                    Text(String(format: "%.1f dB", controller.limiterReductionDB))
+                    unsafe Text(String(format: "%.1f dB", controller.limiterReductionDB))
                         .monospacedDigit()
-                        .foregroundStyle(controller.limiterReductionDB < -0.1 ? .orange : .secondary)
+                        .foregroundStyle(
+                            controller.limiterReductionDB < -0.1 ? .orange : .secondary
+                        )
                 }
                 Text("Cycles IO : \(controller.ioCycles)")
                     .font(.caption)
@@ -31,14 +33,19 @@ struct DiagnosticView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Toggle("Test : couper la sortie d'Amplo (le son doit disparaître)", isOn: $controller.silenceTest)
-                .disabled(!isRunning)
+            Toggle(
+                "Test : couper la sortie d'Amplo (le son doit disparaître)",
+                isOn: $controller.silenceTest,
+            )
+            .disabled(!isRunning)
 
             GroupBox("Diagnostic") {
                 VStack(alignment: .leading, spacing: 4) {
                     if controller.report.isEmpty {
-                        Text("Activez Amplo depuis la barre des menus pour afficher les formats détectés.")
-                            .foregroundStyle(.secondary)
+                        Text(
+                            "Activez Amplo depuis la barre des menus pour afficher les formats détectés."
+                        )
+                        .foregroundStyle(.secondary)
                     }
                     ForEach(Array(controller.report.enumerated()), id: \.offset) { _, line in
                         Text(line)
@@ -51,7 +58,10 @@ struct DiagnosticView: View {
 
             Button("Copier le diagnostic") {
                 NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(controller.report.joined(separator: "\n"), forType: .string)
+                NSPasteboard.general.setString(
+                    controller.report.joined(separator: "\n"),
+                    forType: .string,
+                )
             }
             .disabled(controller.report.isEmpty)
         }
@@ -64,7 +74,7 @@ struct DiagnosticView: View {
             HStack {
                 Text(title)
                 Spacer()
-                Text(String(format: "%.1f dBFS", levelDB))
+                unsafe Text(String(format: "%.1f dBFS", levelDB))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -77,11 +87,12 @@ struct DiagnosticView: View {
     }
 
     private var statusLabel: some View {
-        let (text, color): (String, Color) = switch controller.status {
-        case .stopped: ("Arrêté", .secondary)
-        case .running: ("Actif · gain \(controller.gainPercent) %", .green)
-        case .failed: ("Erreur", .red)
-        }
+        let (text, color): (String, Color) =
+            switch controller.status {
+            case .stopped: ("Arrêté", .secondary)
+            case .running: ("Actif · gain \(controller.gainPercent) %", .green)
+            case .failed: ("Erreur", .red)
+            }
         return Label {
             Text(text).font(.headline)
         } icon: {

@@ -1,8 +1,10 @@
+import AmploDSP
 import Foundation
 import Observation
 import ServiceManagement
 
 /// État de l'app : démarre / arrête le passthrough et expose le niveau de sortie à l'interface.
+///
 /// Le palier et l'état marche / arrêt choisis par l'utilisateur sont mémorisés.
 @MainActor
 @Observable
@@ -116,7 +118,7 @@ final class AmploController {
         }
     }
 
-    private func outputDidChange(error: Error?) {
+    private func outputDidChange(error: (any Error)?) {
         if let error {
             // Plus d'étage de sortie : on arrête tout pour que le tap rende le son d'origine.
             stop()
