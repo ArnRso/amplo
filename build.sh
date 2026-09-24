@@ -1,6 +1,10 @@
 #!/bin/zsh
 # Compile Amplo avec xcodebuild (Release) et place l'app dans build/Amplo.app.
 # Avec --install, la copie aussi dans /Applications (emplacement stable pour l'ouverture à la connexion).
+# Variables optionnelles (utilisées pour les releases) :
+#   AMPLO_ADHOC=1        signature ad hoc même si une équipe est configurée
+#   AMPLO_VERSION=1.2.0  version affichée (MARKETING_VERSION)
+#   AMPLO_BUILD=42       numéro de build (CURRENT_PROJECT_VERSION)
 set -euo pipefail
 cd "${0:A:h}"
 
@@ -11,19 +15,22 @@ fi
 
 # Sans équipe choisie dans Xcode (Signing & Capabilities), on signe en ad hoc :
 # macOS redemandera alors la permission audio après chaque compilation.
-signing=()
-if ! grep -q 'DEVELOPMENT_TEAM = [A-Z0-9]' Amplo.xcodeproj/project.pbxproj; then
-  signing=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=)
+settings=()
+if [[ ${AMPLO_ADHOC:-} == 1 ]] || ! grep -q 'DEVELOPMENT_TEAM = [A-Z0-9]' Amplo.xcodeproj/project.pbxproj; then
+  settings+=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=)
 fi
+[[ -n ${AMPLO_VERSION:-} ]] && settings+=(MARKETING_VERSION=$AMPLO_VERSION)
+[[ -n ${AMPLO_BUILD:-} ]] && settings+=(CURRENT_PROJECT_VERSION=$AMPLO_BUILD)
 
 xcodebuild -project Amplo.xcodeproj -scheme Amplo -configuration Release -destination 'generic/platform=macOS' \
   -derivedDataPath build/DerivedData -allowProvisioningUpdates -quiet \
-  "${signing[@]}" build
+  "${settings[@]}" build
 
-# Quitte proprement l'instance en cours (arrêt du tap, le son revient) : sinon `open`
-# se contenterait de réactiver l'ancienne version.
-if pgrep -xq Amplo; then
-  osascript -e 'quit app id "com.amplo.Amplo"'
+# Quitte proprement l'instance remplacée (arrêt du tap, le son revient) : sinon `open`
+# se contenterait de réactiver l'ancienne version. Une instance lancée ailleurs est laissée tranquille.
+running=$(pgrep -x Amplo | head -1 || true)
+if [[ -n $running ]] && { [[ ${1:-} == --install ]] || ps -o command= -p "$running" | grep -q "^$PWD/build/"; }; then
+  osascript -e 'quit app id "com.arnrso.amplo"'
   while pgrep -xq Amplo; do sleep 0.1; done
 fi
 
