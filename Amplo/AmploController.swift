@@ -12,7 +12,7 @@ final class AmploController {
     }
 
     static let meterFloorDB: Float = -60
-    static let boostGain: Float = 1.5
+    static let gainSteps = [100, 125, 150, 175, 200, 250, 300]
 
     private(set) var status: Status = .stopped
     private(set) var report: [String] = []
@@ -21,7 +21,8 @@ final class AmploController {
     private(set) var isSoftClipping = false
     private(set) var ioCycles: UInt64 = 0
 
-    var isBoostEnabled = true {
+    /// Palier de gain en pourcentage, parmi `gainSteps`.
+    var gainPercent = 150 {
         didSet { passthrough?.renderer.setGain(gain) }
     }
 
@@ -30,7 +31,7 @@ final class AmploController {
     }
 
     var gain: Float {
-        isBoostEnabled ? Self.boostGain : 1
+        Float(gainPercent) / 100
     }
 
     private var passthrough: SystemAudioPassthrough?
