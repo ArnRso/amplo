@@ -18,6 +18,14 @@ En ligne de commande (Release, dans `build/Amplo.app`) :
 open build/Amplo.app
 ```
 
+Pour un usage quotidien, installer dans `/Applications` puis cocher « Ouvrir Amplo à la connexion »
+dans le menu d'Amplo :
+
+```sh
+./build.sh --install
+open /Applications/Amplo.app
+```
+
 Au premier démarrage, macOS demande l'autorisation d'enregistrer l'audio système
 (Réglages Système → Confidentialité et sécurité → Enregistrement de l'écran et de l'audio système).
 Sans équipe choisie, `build.sh` signe en ad hoc et la demande peut revenir après chaque compilation ; pour la réinitialiser :
@@ -34,5 +42,5 @@ Journaux : `log stream --predicate 'subsystem == "com.amplo.Amplo"'`
 2. ✅ Appliquer un gain fixe de 150 % avec soft clipping
 3. ✅ Rendre le gain modifiable via les paliers
 4. ✅ Gérer le changement de sortie à chaud
-5. Ajouter l'interface barre de menus
+5. ✅ Ajouter l'interface barre de menus (+ ouverture à la connexion)
 6. ✅ Remplacer le soft clipping par un limiteur (avancée avant l'étape 4)
