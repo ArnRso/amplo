@@ -1,5 +1,6 @@
 # Compile Amplo et produit le .zip et le .dmg (signature ad hoc, non notarisés).
-# - tag v* poussé : crée la Release GitHub correspondante avec les deux fichiers ;
+# - tag v* poussé : signe le .zip pour Sparkle (secret SPARKLE_PRIVATE_KEY), génère appcast.xml
+#   et crée la Release GitHub avec les trois fichiers ;
 # - pull request ou lancement manuel : simple vérification, fichiers en artefacts.
 name: Release
 
@@ -27,6 +28,26 @@ jobs:
         run: |
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then version="${GITHUB_REF_NAME#v}"; else version="0.0.0-dev.$GITHUB_RUN_NUMBER"; fi
           scripts/package.sh "$version" "$GITHUB_RUN_NUMBER"
+
+      - name: Signer la mise à jour Sparkle et générer l'appcast
+        if: github.ref_type == 'tag'
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$SPARKLE_PRIVATE_KEY" ]]; then echo "::error::Secret SPARKLE_PRIVATE_KEY manquant"; exit 1; fi
+          mkdir -p build/appcast
+          cp dist/*.zip build/appcast/
+          echo "$SPARKLE_PRIVATE_KEY" | build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast \
+            --ed-key-file - \
+            --download-url-prefix "https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/" \
+            --link "https://github.com/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME" \
+            -o dist/appcast.xml build/appcast
+          cat dist/appcast.xml
+          # Sans signature, les apps installées refuseraient la mise à jour.
+          if ! grep -q 'sparkle:edSignature' dist/appcast.xml; then
+            echo "::error::Appcast non signé : SPARKLE_PRIVATE_KEY ne correspond pas à SUPublicEDKey (Info.plist)"
+            exit 1
+          fi
 
       - name: Publier la release
         if: github.ref_type == 'tag'

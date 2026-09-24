@@ -7,7 +7,7 @@ struct AmploApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarView(controller: appDelegate.controller)
+            MenuBarView(controller: appDelegate.controller, updates: appDelegate.updates)
         } label: {
             MenuBarIcon(controller: appDelegate.controller)
         }
@@ -24,6 +24,7 @@ struct AmploApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let controller = AmploController()
+    let updates = UpdateManager()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller.restoreLastState()
