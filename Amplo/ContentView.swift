@@ -37,7 +37,17 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Toggle("Gain 150 % (sinon 100 %, copie sans altération)", isOn: $controller.isBoostEnabled)
+            VStack(alignment: .leading, spacing: 6) {
+                Picker("Gain", selection: $controller.gainPercent) {
+                    ForEach(AmploController.gainSteps, id: \.self) { percent in
+                        Text("\(percent) %").tag(percent)
+                    }
+                }
+                .pickerStyle(.segmented)
+                Text("100 % : copie sans altération")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Toggle("Test : couper la sortie d'Amplo (le son doit disparaître)", isOn: $controller.silenceTest)
                 .disabled(!isRunning)
@@ -87,7 +97,7 @@ struct ContentView: View {
     private var statusLabel: some View {
         let (text, color): (String, Color) = switch controller.status {
         case .stopped: ("Arrêté", .secondary)
-        case .running: ("Actif · gain \(Int((controller.gain * 100).rounded())) %", .green)
+        case .running: ("Actif · gain \(controller.gainPercent) %", .green)
         case .failed: ("Erreur", .red)
         }
         return Label {
