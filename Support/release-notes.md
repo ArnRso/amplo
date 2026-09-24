@@ -7,4 +7,6 @@
 3. Amplo apparaît dans la barre des menus (icône d'enceinte). Activez-le et acceptez l'autorisation
    d'enregistrer l'audio système. Après une mise à jour, macOS peut redemander cette autorisation.
 
+Les versions suivantes s'installent depuis Amplo (mise à jour automatique, ou menu › Rechercher les mises à jour…).
+
 Configuration requise : macOS 15 ou plus récent, Mac Apple Silicon ou Intel.

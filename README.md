@@ -24,6 +24,13 @@ git push origin v0.1.0
 ```
 
 En local, `scripts/package.sh 0.1.0` produit les mêmes fichiers dans `dist/`.
+
+### Mises à jour automatiques (Sparkle)
+
+Amplo vérifie chaque jour `appcast.xml`, publié avec chaque release. La CI signe le `.zip` avec la clé
+privée EdDSA (secret `SPARKLE_PRIVATE_KEY`) ; l'app n'accepte que les mises à jour signées par la clé
+correspondant à `SUPublicEDKey` (Info.plist). Perdre la clé privée empêche toute mise à jour
+des versions installées : la conserver en lieu sûr.
 L'icône et le fond du `.dmg` sont générés par `swift scripts/make-artwork.swift`.
 
 ## Compiler et lancer
