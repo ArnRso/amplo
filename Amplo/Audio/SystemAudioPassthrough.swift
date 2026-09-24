@@ -4,9 +4,9 @@ import Foundation
 /// Capture tout le son du système (sauf Amplo) et le rejoue sur la sortie par défaut.
 ///
 /// Chaîne : tap global qui coupe le son d'origine → aggregate device privé contenant la
-/// sortie par défaut et le tap → IOProc qui recopie l'entrée (tap) vers la sortie.
+/// sortie par défaut et le tap → IOProc qui amplifie le tap vers la sortie (voir BoostRenderer).
 final class SystemAudioPassthrough {
-    let renderer: PassthroughRenderer
+    let renderer: BoostRenderer
     let report: [String]
 
     private let tap: AudioHardwareTap
@@ -60,7 +60,7 @@ final class SystemAudioPassthrough {
 
             // 3. Routage des canaux d'après les formats réels du tap et de la sortie.
             let plan = try attempt("Lecture des formats", { try RoutingPlan(aggregate: aggregate, output: output, tap: tap) })
-            let renderer = PassthroughRenderer(
+            let renderer = BoostRenderer(
                 routes: plan.routes,
                 inputBufferCount: plan.inputBufferCount,
                 outputBufferCount: plan.outputBufferCount

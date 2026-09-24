@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Fenêtre de test de l'étape 1, remplacée par le menu de la barre des menus à l'étape 5.
+/// Fenêtre de test du POC, remplacée par le menu de la barre des menus à l'étape 5.
 struct ContentView: View {
     @Bindable var controller: AmploController
 
@@ -26,6 +26,9 @@ struct ContentView: View {
                 HStack {
                     Text("Niveau envoyé à la sortie")
                     Spacer()
+                    Text("Soft clipping")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(controller.isSoftClipping ? .orange : .secondary.opacity(0.4))
                     Text(String(format: "%.1f dBFS", controller.levelDB))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -36,6 +39,8 @@ struct ContentView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
+
+            Toggle("Gain 150 % (sinon 100 %, copie sans altération)", isOn: $controller.isBoostEnabled)
 
             Toggle("Test : couper la sortie d'Amplo (le son doit disparaître)", isOn: $controller.silenceTest)
                 .disabled(!isRunning)
@@ -72,7 +77,7 @@ struct ContentView: View {
     private var statusLabel: some View {
         let (text, color): (String, Color) = switch controller.status {
         case .stopped: ("Arrêté", .secondary)
-        case .running: ("Actif · passthrough 100 %", .green)
+        case .running: ("Actif · gain \(Int((controller.gain * 100).rounded())) %", .green)
         case .failed: ("Erreur", .red)
         }
         return Label {
