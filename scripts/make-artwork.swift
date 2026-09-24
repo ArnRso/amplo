@@ -109,9 +109,25 @@ func drawBackground(scale: CGFloat) -> Data {
     arrow.stroke()
 
     text("Premier lancement : si macOS bloque Amplo, ouvrez Réglages Système",
-         y: 318, size: 12, weight: .regular, color: NSColor(white: 0.35, alpha: 1))
-    text("› Confidentialité et sécurité › « Ouvrir quand même ».",
-         y: 337, size: 12, weight: .regular, color: NSColor(white: 0.35, alpha: 1))
+         y: 300, size: 12, weight: .regular, color: NSColor(white: 0.35, alpha: 1))
+    text("› Confidentialité et sécurité › « Ouvrir quand même », ou dans le Terminal :",
+         y: 319, size: 12, weight: .regular, color: NSColor(white: 0.35, alpha: 1))
+
+    let command = "xattr -dr com.apple.quarantine /Applications/Amplo.app" as NSString
+    let commandAttributes: [NSAttributedString.Key: Any] = [
+        .font: NSFont.monospacedSystemFont(ofSize: 12, weight: .regular),
+        .foregroundColor: NSColor(white: 0.15, alpha: 1),
+    ]
+    let commandSize = command.size(withAttributes: commandAttributes)
+    let commandBox = NSRect(
+        x: (backgroundSize.width - commandSize.width) / 2 - 10,
+        y: backgroundSize.height - 358,
+        width: commandSize.width + 20,
+        height: commandSize.height + 10
+    )
+    NSColor(white: 0.85, alpha: 1).setFill()
+    NSBezierPath(roundedRect: commandBox, xRadius: 6, yRadius: 6).fill()
+    command.draw(at: NSPoint(x: commandBox.minX + 10, y: commandBox.minY + 5), withAttributes: commandAttributes)
 
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!
