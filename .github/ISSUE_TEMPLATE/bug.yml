@@ -1,0 +1,47 @@
+name: Problème
+description: Signaler un dysfonctionnement d'Amplo
+labels: [bug]
+body:
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Ce qui se passe
+      description: Ce que vous constatez, et ce que vous attendiez.
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Activer Amplo à 200 %
+        2. Brancher des écouteurs
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version d'Amplo
+      description: Affichée en bas du menu d'Amplo.
+      placeholder: "0.2.1"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: Version de macOS
+      placeholder: "macOS 27.0"
+    validations:
+      required: true
+  - type: input
+    id: sortie
+    attributes:
+      label: Sortie audio
+      placeholder: "Haut-parleurs intégrés, jack, AirPods Pro…"
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Diagnostic
+      description: Menu d'Amplo › Diagnostic… › « Copier le diagnostic », puis coller ici.
+      render: text

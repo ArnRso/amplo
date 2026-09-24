@@ -84,3 +84,12 @@ Journaux : `log stream --predicate 'subsystem == "com.arnrso.amplo"'`
 4. ✅ Gérer le changement de sortie à chaud
 5. ✅ Ajouter l'interface barre de menus (+ ouverture à la connexion)
 6. ✅ Remplacer le soft clipping par un limiteur (avancée avant l'étape 4)
+
+## Licence
+
+Amplo est distribué sous licence [GNU GPL 3.0](LICENSE) : vous pouvez l'utiliser, l'étudier, le modifier
+et le redistribuer, à condition que toute version distribuée reste sous GPL 3.0 avec son code source.
+
+Composants tiers : [Sparkle](https://sparkle-project.org) (licences MIT, BSD et zlib, reproduites dans
+[Amplo/Legal/ThirdPartyNotices.txt](Amplo/Legal/ThirdPartyNotices.txt)). La licence d'Amplo et celles des
+composants tiers sont incluses dans l'app (`Amplo.app/Contents/Resources`).
