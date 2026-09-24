@@ -5,6 +5,7 @@ import SwiftUI
 /// Panneau ouvert depuis l'icône de la barre des menus.
 struct MenuBarView: View {
     @Bindable var controller: AmploController
+    let updates: UpdateManager
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -74,6 +75,25 @@ struct MenuBarView: View {
             }
 
             Divider()
+
+            if let version = updates.availableVersion {
+                Button("Installer la mise à jour \(version)…") {
+                    updates.checkForUpdates()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+
+            HStack {
+                Text("Amplo \(updates.currentVersion)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Rechercher les mises à jour…") {
+                    updates.checkForUpdates()
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+            }
 
             HStack {
                 Button("Diagnostic…") {
