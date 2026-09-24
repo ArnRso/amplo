@@ -1,5 +1,7 @@
+import AmploDSP
 import CoreAudio
 import Foundation
+import OSLog
 
 /// Capture tout le son du système (sauf Amplo) et le rejoue, amplifié, sur la sortie par défaut.
 ///
@@ -8,9 +10,10 @@ import Foundation
 /// Le tap vit pendant toute la session : le son d'origine reste coupé pendant une bascule.
 /// L'étage de sortie est reconstruit quand la sortie par défaut change (jack, Bluetooth…).
 @MainActor
+@safe
 final class SystemAudioPassthrough {
     /// Appelé après un changement de sortie : nil si l'étage a été reconstruit, sinon l'erreur.
-    var onOutputChange: ((Error?) -> Void)?
+    var onOutputChange: (((any Error)?) -> Void)?
 
     private let tap: AudioHardwareTap
     private var stage: OutputStage?
@@ -21,7 +24,7 @@ final class SystemAudioPassthrough {
     private static var defaultOutputAddress = AudioObjectPropertyAddress(
         mSelector: kAudioHardwarePropertyDefaultOutputDevice,
         mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMain
+        mElement: kAudioObjectPropertyElementMain,
     )
 
     var renderer: BoostRenderer? {
@@ -38,8 +41,15 @@ final class SystemAudioPassthrough {
 
     init(gain: Float, silenceTest: Bool) throws {
         let system = AudioHardwareSystem.shared
-        guard let ownProcess = try attempt("Lecture du processus Amplo", { try system.process(for: getpid()) }) else {
-            throw AmploAudioError("Processus Amplo introuvable dans Core Audio : impossible de l'exclure du tap.")
+        guard
+            let ownProcess = try attempt(
+                "Lecture du processus Amplo",
+                { try system.process(for: getpid()) },
+            )
+        else {
+            throw AmploAudioError(
+                "Processus Amplo introuvable dans Core Audio : impossible de l'exclure du tap."
+            )
         }
 
         // Tap global stéréo, sans Amplo (sinon boucle), qui coupe le son d'origine.
@@ -48,7 +58,12 @@ final class SystemAudioPassthrough {
         description.uuid = UUID()
         description.isPrivate = true
         description.muteBehavior = .muted
-        guard let tap = try attempt("Création du tap", { try system.makeProcessTap(description: description) }) else {
+        guard
+            let tap = try attempt(
+                "Création du tap",
+                { try system.makeProcessTap(description: description) },
+            )
+        else {
             throw AmploAudioError("Création du tap : aucun objet renvoyé.")
         }
 
@@ -57,7 +72,12 @@ final class SystemAudioPassthrough {
         self.silenceTest = silenceTest
 
         do {
-            guard let output = try attempt("Lecture de la sortie par défaut", { try system.defaultOutputDevice }) else {
+            guard
+                let output = try attempt(
+                    "Lecture de la sortie par défaut",
+                    { try system.defaultOutputDevice },
+                )
+            else {
                 throw AmploAudioError("Aucune sortie audio par défaut.")
             }
             stage = try OutputStage(tap: tap, output: output, gain: gain, silenceTest: silenceTest)
@@ -70,9 +90,14 @@ final class SystemAudioPassthrough {
         let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
             self?.defaultOutputDidChange()
         }
-        let status = AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &Self.defaultOutputAddress, .main, listener)
+        let status = unsafe AudioObjectAddPropertyListenerBlock(
+            AudioObjectID(kAudioObjectSystemObject),
+            &Self.defaultOutputAddress,
+            .main,
+            listener,
+        )
         if status == noErr {
-            self.listener = listener
+            unsafe self.listener = unsafe listener
         } else {
             audioLog.error("Écoute des changements de sortie impossible : OSStatus \(status)")
         }
@@ -85,15 +110,21 @@ final class SystemAudioPassthrough {
 
     func setSilenceTest(_ silenceTest: Bool) {
         self.silenceTest = silenceTest
-        stage?.renderer.silenceTest.store(silenceTest, ordering: .relaxed)
+        stage?.renderer.setSilenceTest(silenceTest)
     }
 
     /// Arrêt : écoute des changements, étage de sortie, puis tap.
+    ///
     /// La destruction du tap rend le son d'origine aux applications.
     func stop() {
-        if let listener {
-            AudioObjectRemovePropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &Self.defaultOutputAddress, .main, listener)
-            self.listener = nil
+        if let listener = unsafe listener {
+            unsafe AudioObjectRemovePropertyListenerBlock(
+                AudioObjectID(kAudioObjectSystemObject),
+                &Self.defaultOutputAddress,
+                .main,
+                listener,
+            )
+            unsafe self.listener = nil
         }
         stage?.stop()
         stage = nil
@@ -107,7 +138,12 @@ final class SystemAudioPassthrough {
 
     private func defaultOutputDidChange() {
         do {
-            guard let output = try attempt("Lecture de la sortie par défaut", { try AudioHardwareSystem.shared.defaultOutputDevice }) else {
+            guard
+                let output = try attempt(
+                    "Lecture de la sortie par défaut",
+                    { try AudioHardwareSystem.shared.defaultOutputDevice },
+                )
+            else {
                 throw AmploAudioError("Aucune sortie audio par défaut.")
             }
             let outputUID = try attempt("Lecture de l'UID de la sortie", { try output.uid })

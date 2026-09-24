@@ -33,6 +33,19 @@ correspondant à `SUPublicEDKey` (Info.plist). Perdre la clé privée empêche t
 des versions installées : la conserver en lieu sûr.
 L'icône et le fond du `.dmg` sont générés par `swift scripts/make-artwork.swift`.
 
+## Qualité du code
+
+Règles les plus strictes, vérifiées par la CI ([ci.yml](.github/workflows/ci.yml)) sur chaque pull request :
+
+- **Tests** : le traitement audio temps réel (routage, gain, limiteur) vit dans le package local
+  [AmploDSP](Packages/AmploDSP), testé avec Swift Testing, y compris sous Address Sanitizer :
+  `scripts/test.sh`
+- **Formatage et style** : `swift format` avec toutes les règles activées ([.swift-format](.swift-format)) :
+  `scripts/lint.sh` pour vérifier, `scripts/lint.sh --fix` pour reformater
+- **Compilation** : Swift 6 en concurrence stricte, sûreté mémoire explicite (`unsafe`),
+  `ExistentialAny`, `InternalImportsByDefault`, `MemberImportVisibility`, avertissements bloquants
+- **Dépendances** : Dependabot propose chaque semaine les mises à jour de Sparkle et des actions GitHub
+
 ## Compiler et lancer
 
 Avec Xcode : ouvrir `Amplo.xcodeproj` et lancer le schéma **Amplo** (⌘R).
