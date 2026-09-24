@@ -51,10 +51,10 @@ Au premier démarrage, macOS demande l'autorisation d'enregistrer l'audio systè
 Sans équipe choisie, `build.sh` signe en ad hoc et la demande peut revenir après chaque compilation ; pour la réinitialiser :
 
 ```sh
-tccutil reset AudioCapture com.amplo.Amplo
+tccutil reset AudioCapture com.arnrso.amplo
 ```
 
-Journaux : `log stream --predicate 'subsystem == "com.amplo.Amplo"'`
+Journaux : `log stream --predicate 'subsystem == "com.arnrso.amplo"'`
 
 ## Avancement du POC
 

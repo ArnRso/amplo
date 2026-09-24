@@ -30,7 +30,7 @@ xcodebuild -project Amplo.xcodeproj -scheme Amplo -configuration Release -destin
 # se contenterait de réactiver l'ancienne version. Une instance lancée ailleurs est laissée tranquille.
 running=$(pgrep -x Amplo | head -1 || true)
 if [[ -n $running ]] && { [[ ${1:-} == --install ]] || ps -o command= -p "$running" | grep -q "^$PWD/build/"; }; then
-  osascript -e 'quit app id "com.amplo.Amplo"'
+  osascript -e 'quit app id "com.arnrso.amplo"'
   while pgrep -xq Amplo; do sleep 0.1; done
 fi
 
