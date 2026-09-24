@@ -38,6 +38,7 @@ final class BoostRenderer: @unchecked Sendable {
     let silenceTest = Atomic<Bool>(false)
 
     private let targetGainBits = Atomic<UInt32>(Float(1).bitPattern)
+    private let inputPeakBits = Atomic<UInt32>(0)
     private let peakBits = Atomic<UInt32>(0)
     private let clippedSamples = Atomic<UInt32>(0)
     private let cycles = Atomic<UInt64>(0)
@@ -61,6 +62,11 @@ final class BoostRenderer: @unchecked Sendable {
     /// en rampe sur un buffer pour éviter un clic.
     func setGain(_ gain: Float) {
         targetGainBits.store(gain.bitPattern, ordering: .relaxed)
+    }
+
+    /// Crête absolue du son capturé, avant gain, depuis le dernier appel.
+    func takeInputPeak() -> Float {
+        Float(bitPattern: inputPeakBits.exchange(0, ordering: .relaxed))
     }
 
     /// Crête absolue écrite en sortie depuis le dernier appel.
@@ -96,6 +102,7 @@ final class BoostRenderer: @unchecked Sendable {
         currentGain = targetGain
         let isBypassed = startGain == 1 && targetGain == 1
 
+        var inputPeak: Float = 0
         var peak: Float = 0
         var clipped: UInt32 = 0
         for route in routes {
@@ -103,12 +110,15 @@ final class BoostRenderer: @unchecked Sendable {
             let count = Self.copy(route.source, from: inputs, to: destination)
             if isBypassed {
                 for frame in 0..<count {
-                    peak = max(peak, abs(destination[frame]))
+                    inputPeak = max(inputPeak, abs(destination[frame]))
                 }
+                peak = inputPeak
             } else {
                 let gainStep = (targetGain - startGain) / Float(destination.frames)
                 for frame in 0..<count {
-                    let amplified = destination[frame] * (startGain + gainStep * Float(frame + 1))
+                    let captured = destination[frame]
+                    inputPeak = max(inputPeak, abs(captured))
+                    let amplified = captured * (startGain + gainStep * Float(frame + 1))
                     if abs(amplified) > Self.softClipThreshold {
                         clipped += 1
                     }
@@ -119,6 +129,9 @@ final class BoostRenderer: @unchecked Sendable {
             }
         }
 
+        if inputPeak > Float(bitPattern: inputPeakBits.load(ordering: .relaxed)) {
+            inputPeakBits.store(inputPeak.bitPattern, ordering: .relaxed)
+        }
         if peak > Float(bitPattern: peakBits.load(ordering: .relaxed)) {
             peakBits.store(peak.bitPattern, ordering: .relaxed)
         }
